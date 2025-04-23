@@ -5,3 +5,4 @@ __pycache__/
 .terraform.lock.hcl
 *.tfstate
 inventory.ini
+_infrastructure/terraform/terraform.tfstate.backup
