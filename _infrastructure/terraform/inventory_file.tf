@@ -2,11 +2,11 @@ resource "local_file" "ansible_inventory" {
   filename = "${path.module}/../ansible/inventory.ini"
   content  = <<-EOT
   [control_plane]
-  ${aws_instance.k8s_control_plane.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
+  ${aws_instance.k8s_control_plane.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
   [workers]
   %{ for worker in aws_instance.k8s_worker ~}
-  ${worker.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
+  ${worker.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
   %{ endfor ~}
 
   [all:vars]
