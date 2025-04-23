@@ -1,9 +1,7 @@
-# AWS Provider
 provider "aws" {
   region = var.region
 }
 
-# VPC
 resource "aws_vpc" "k8s_vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
@@ -13,7 +11,6 @@ resource "aws_vpc" "k8s_vpc" {
   }
 }
 
-# Public Subnet
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.k8s_vpc.id
   cidr_block              = var.subnet_cidr
@@ -24,7 +21,6 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-# Internet Gateway
 resource "aws_internet_gateway" "k8s_igw" {
   vpc_id = aws_vpc.k8s_vpc.id
   tags = {
@@ -32,7 +28,6 @@ resource "aws_internet_gateway" "k8s_igw" {
   }
 }
 
-# Route Table
 resource "aws_route_table" "k8s_route_table" {
   vpc_id = aws_vpc.k8s_vpc.id
   route {
@@ -44,19 +39,16 @@ resource "aws_route_table" "k8s_route_table" {
   }
 }
 
-# Route Table Association
 resource "aws_route_table_association" "k8s_route_assoc" {
   subnet_id      = aws_subnet.public_subnet.id
   route_table_id = aws_route_table.k8s_route_table.id
 }
 
-# Security Group for Kubernetes
 resource "aws_security_group" "k8s_sg" {
   name        = "k8s-security-group"
   description = "Allow SSH and Kubernetes traffic"
   vpc_id      = aws_vpc.k8s_vpc.id
 
-  # SSH access
   ingress {
     description = "SSH"
     from_port   = 22
@@ -65,7 +57,6 @@ resource "aws_security_group" "k8s_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Kubernetes API server
   ingress {
     description = "Kube API"
     from_port   = 6443
@@ -74,7 +65,6 @@ resource "aws_security_group" "k8s_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Kubelet, scheduler, controller manager
   ingress {
     description = "Kubelet and control plane"
     from_port   = 10250
@@ -83,7 +73,6 @@ resource "aws_security_group" "k8s_sg" {
     cidr_blocks = [var.vpc_cidr]
   }
 
-  # NodePort services
   ingress {
     description = "NodePort"
     from_port   = 30000
@@ -92,7 +81,6 @@ resource "aws_security_group" "k8s_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow all traffic within VPC for Kubernetes communication
   ingress {
     description = "Internal VPC traffic"
     from_port   = 0
@@ -113,13 +101,11 @@ resource "aws_security_group" "k8s_sg" {
   }
 }
 
-# SSH Key Pair
 resource "aws_key_pair" "k8s_key" {
   key_name   = var.key_pair_name
   public_key = file(var.public_key_path)
 }
 
-# EC2 Instance for Control Plane
 resource "aws_instance" "k8s_control_plane" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.control_plane_instance_type
@@ -133,7 +119,6 @@ resource "aws_instance" "k8s_control_plane" {
   }
 }
 
-# EC2 Instances for Worker Nodes
 resource "aws_instance" "k8s_worker" {
   count                  = var.worker_count
   ami                    = data.aws_ami.ubuntu.id
@@ -148,7 +133,6 @@ resource "aws_instance" "k8s_worker" {
   }
 }
 
-# Data source for latest Ubuntu 20.04 AMI
 data "aws_ami" "ubuntu" {
   most_recent = true
   filter {
@@ -159,5 +143,5 @@ data "aws_ami" "ubuntu" {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-  owners = ["099720109477"] # Canonical
+  owners = ["099720109477"]
 }
