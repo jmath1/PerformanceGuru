@@ -1,0 +1,20 @@
+---
+- name: Check if kubeconfig exists
+  stat:
+    path: /home/ubuntu/.kube/config
+  register: kubeconfig_stat
+  become: yes
+
+- name: Fail if kubeconfig is missing
+  fail:
+    msg: "Kubeconfig file /home/ubuntu/.kube/config is missing on {{ ansible_host }}"
+  when: not kubeconfig_stat.stat.exists
+
+- name: Install Calico CNI
+  command: >
+    kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/calico.yaml
+  environment:
+    KUBECONFIG: /home/ubuntu/.kube/config
+  register: calico_apply
+  changed_when: calico_apply.rc == 0
+  become: yes

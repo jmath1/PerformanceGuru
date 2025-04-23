@@ -1,0 +1,19 @@
+---
+- name: Configure Kubernetes Cluster
+  hosts: all
+  become: yes
+  roles:
+    - common
+    - docker
+    - kubernetes
+- name: Configure Kubernetes Control Plane
+  hosts: control_plane
+  become: yes
+  roles:
+    - control_plane
+    - calico
+- name: Configure Kubernetes Worker Nodes
+  hosts: workers
+  become: yes
+  roles:
+    - worker

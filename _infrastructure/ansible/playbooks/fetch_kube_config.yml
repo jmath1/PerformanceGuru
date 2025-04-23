@@ -1,0 +1,33 @@
+---
+- name: Fetch and configure local kubeconfig
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Fail if control plane group is empty
+      fail:
+        msg: "No control plane host found in inventory group 'control_plane'"
+      when: groups['control_plane'] | length == 0
+
+    - name: Check SSH key existence
+      stat:
+        path: "{{ hostvars[groups['control_plane'][0]].ansible_ssh_private_key_file }}"
+      register: ssh_key_stat
+      failed_when: not ssh_key_stat.stat.exists
+
+    - name: Debug variables
+      debug:
+        msg:
+          - "control_plane_host: {{ groups['control_plane'][0] }}"
+          - "control_plane_user: {{ hostvars[groups['control_plane'][0]].ansible_user }}"
+          - "control_plane_key: {{ hostvars[groups['control_plane'][0]].ansible_ssh_private_key_file }}"
+          - "api_server_address: {{ hostvars[groups['control_plane'][0]].control_plane_api_server_address }}"
+      when: ansible_verbosity > 0
+
+    - name: Include kubeconfig role
+      include_role:
+        name: kubeconfig
+      vars:
+        control_plane_host: "{{ groups['control_plane'][0] }}"
+        control_plane_user: "{{ hostvars[groups['control_plane'][0]].ansible_user }}"
+        control_plane_key: "{{ hostvars[groups['control_plane'][0]].ansible_ssh_private_key_file }}"
+        api_server_address: "{{ hostvars[groups['control_plane'][0]].control_plane_api_server_address }}"

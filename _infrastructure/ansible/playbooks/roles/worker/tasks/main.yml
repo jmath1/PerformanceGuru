@@ -1,0 +1,14 @@
+---
+- name: Validate k8s_join_command
+  fail:
+    msg: "k8s_join_command is not defined or invalid for control plane host {{ groups['control_plane'][0] }}"
+  when: >
+    hostvars[groups['control_plane'][0]].k8s_join_command is not defined or
+    hostvars[groups['control_plane'][0]].k8s_join_command is none or
+    not hostvars[groups['control_plane'][0]].k8s_join_command | regex_search('kubeadm join .+ --token .+ --discovery-token-ca-cert-hash .+')
+
+- name: Join worker node to cluster
+  command: "{{ hostvars[groups['control_plane'][0]].k8s_join_command }}"
+  register: kubeadm_join
+  changed_when: kubeadm_join.rc == 0
+  become: yes

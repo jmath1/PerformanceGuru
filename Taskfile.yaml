@@ -1,0 +1,20 @@
+version: "3"
+
+vars:
+  namespace: "django-app"
+
+tasks:
+  create_cluster_infra:
+    desc: Create a Minikube cluster using terraform
+    cmds:
+      - terraform -chdir=./_infrastructure/terraform init
+      - terraform -chdir=./_infrastructure/terraform apply
+  destroy_cluster_infra:
+    desc: Destroy the Minikube cluster using terraform
+    cmds:
+      - terraform -chdir=./_infrastructure/terraform destroy
+  apb:
+    desc: Run an ansible playbook
+    cmds:
+      - playbook=$(echo {{ .CLI_ARGS }} | cut -d " " -f1);
+        ansible-playbook -i _infrastructure/ansible/inventory.ini _infrastructure/ansible/playbooks/${playbook}.yml

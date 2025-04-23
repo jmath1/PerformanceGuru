@@ -1,0 +1,88 @@
+---
+- name: Check if Kubernetes is already initialized
+  stat:
+    path: /etc/kubernetes/manifests/kube-apiserver.yaml
+  register: kube_manifest_stat
+  become: yes
+
+- name: Reset Kubernetes if already initialized
+  command: kubeadm reset -f
+  when: kube_manifest_stat.stat.exists
+  register: kubeadm_reset
+  changed_when: kubeadm_reset.rc == 0
+  become: yes
+
+- name: Clean up Kubernetes directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/kubernetes
+    - /var/lib/etcd
+    - /home/ubuntu/.kube
+  when: kube_manifest_stat.stat.exists
+  become: yes
+
+- name: Initialize Kubernetes control plane
+  command: >
+    kubeadm init
+    --pod-network-cidr=192.168.0.0/16
+    --apiserver-cert-extra-sans={{ ansible_host }}
+    --control-plane-endpoint={{ ansible_host }}:6443
+  register: kubeadm_init
+  when: not ansible_check_mode
+  changed_when: kubeadm_init.rc == 0
+  become: yes
+
+- name: Check admin.conf existence
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: admin_conf_stat
+  become: yes
+  when: kubeadm_init.rc == 0
+
+- name: Fail if admin.conf is missing
+  fail:
+    msg: "Kubernetes initialization failed: /etc/kubernetes/admin.conf is missing"
+  when: kubeadm_init.rc == 0 and not admin_conf_stat.stat.exists
+
+- name: Generate kubeadm join command
+  command: kubeadm token create --print-join-command
+  register: kubeadm_join
+  when: kubeadm_init.rc == 0
+  become: yes
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Fail if join command generation failed
+  fail:
+    msg: "Failed to generate kubeadm join command: {{ kubeadm_join.stderr | default('Unknown error') }}"
+  when: kubeadm_join.rc != 0
+
+- name: Store kubeadm join command
+  set_fact:
+    k8s_join_command: "{{ kubeadm_join.stdout }}"
+    cacheable: true
+  delegate_facts: true
+  when: kubeadm_join.rc == 0
+
+- name: Ensure .kube directory exists for ubuntu user
+  file:
+    path: /home/ubuntu/.kube
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0700"
+  become: yes
+  # Note: Creates /home/ubuntu/.kube on the control plane node (e.g., 44.202.35.11 or 54.166.99.218)
+
+- name: Copy admin.conf to user kubeconfig
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ubuntu/.kube/config
+    owner: ubuntu
+    group: ubuntu
+    mode: "0600"
+    remote_src: true
+  become: yes
+  # Note: Sets up /home/ubuntu/.kube/config on the control plane node, fetched to /Users/jmath/.kube/config on the Mac by fetch_kubeconfig.yml

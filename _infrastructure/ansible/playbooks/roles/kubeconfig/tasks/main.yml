@@ -1,0 +1,84 @@
+---
+- name: Ensure local .kube directory exists
+  file:
+    path: ~/.kube
+    state: directory
+    mode: "0700"
+
+- name: Check SSH connectivity to control plane
+  command: ssh -i {{ control_plane_key }} {{ control_plane_user }}@{{ control_plane_host }} true
+  changed_when: false
+  delegate_to: localhost
+  register: ssh_result
+  ignore_errors: true
+
+- name: Fail if SSH connectivity check failed
+  fail:
+    msg: "Cannot SSH to control plane: {{ ssh_result.stderr | default('Unknown error') }}"
+  when: ssh_result.rc != 0
+
+- name: Fetch kubeconfig from control plane
+  command: >
+    scp -i {{ control_plane_key }}
+    {{ control_plane_user }}@{{ control_plane_host }}:/home/{{ control_plane_user }}/.kube/config
+    /tmp/kubeconfig
+  changed_when: false
+  delegate_to: localhost
+  ignore_errors: true
+  register: scp_result
+
+- name: Fail if kubeconfig fetch failed
+  fail:
+    msg: "Failed to fetch kubeconfig: {{ scp_result.stderr | default('Unknown error') }}"
+  when: scp_result.rc != 0
+
+- name: Read kubeconfig content
+  slurp:
+    src: /tmp/kubeconfig
+  register: kubeconfig_content
+
+- name: Parse kubeconfig as YAML
+  set_fact:
+    kubeconfig_data: "{{ kubeconfig_content.content | b64decode | from_yaml }}"
+
+- name: Validate certificate-authority-data
+  fail:
+    msg: "certificate-authority-data is missing or empty in kubeconfig"
+  when: not kubeconfig_data.clusters[0].cluster['certificate-authority-data'] or kubeconfig_data.clusters[0].cluster['certificate-authority-data'] == ''
+
+- name: Fetch API server certificate
+  command: >
+    ssh -i {{ control_plane_key }} {{ control_plane_user }}@{{ control_plane_host }}
+    openssl x509 -in /etc/kubernetes/pki/apiserver.crt -noout -text
+  changed_when: false
+  delegate_to: localhost
+  register: cert_output
+
+- name: Extract SANs from certificate
+  set_fact:
+    cert_sans: "{{ cert_output.stdout | regex_findall('DNS:[^,]+|IP Address:[^,]+') | map('regex_replace', '^(DNS:|IP Address:)', '') | list }}"
+
+- name: Warn if api_server_address not in SANs
+  debug:
+    msg: "Warning: api_server_address {{ api_server_address }} not in API server certificate SANs: {{ cert_sans }}. Consider regenerating certificate with --apiserver-cert-extra-sans={{ control_plane_host }}"
+  when: control_plane_host not in cert_sans and api_server_address.split(':')[1].replace('//', '') not in cert_sans
+
+- name: Update API server address
+  set_fact:
+    kubeconfig_data: "{{ kubeconfig_data | combine({'clusters': [{'cluster': {'server': api_server_address, 'certificate-authority-data': kubeconfig_data.clusters[0].cluster['certificate-authority-data']}, 'name': kubeconfig_data.clusters[0].name}]}, recursive=True) }}"
+
+- name: Validate API server address
+  fail:
+    msg: "API server address not updated correctly in kubeconfig: {{ kubeconfig_data.clusters[0].cluster.server }}"
+  when: kubeconfig_data.clusters[0].cluster.server != api_server_address
+
+- name: Save updated kubeconfig locally
+  copy:
+    content: "{{ kubeconfig_data | to_yaml }}"
+    dest: ~/.kube/config
+    mode: "0600"
+
+- name: Remove temporary kubeconfig
+  file:
+    path: /tmp/kubeconfig
+    state: absent

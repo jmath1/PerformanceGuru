@@ -1,0 +1,209 @@
+# Performance Guru
+
+Performance Guru is a demonstration project aimed at showcasing database and application performance optimizations for a task management web application. The project will deploy a Kubernetes cluster on AWS using Terraform and Ansible for infrastructure automation, with a React-based frontend for configuring performance tests and Grafana for visualizing results. The goal is to quantify the impact of various optimization techniques through measurable improvements in latency and throughput, allowing users to interactively explore and compare unoptimized and optimized configurations.
+
+## Project Goals
+
+The project seeks to demonstrate the following performance optimizations, each designed to improve the efficiency of a task management application:
+
+- **Database Indexing**: Implement indexes on `user_id` (PostgreSQL) and `task_id` (MongoDB) to speed up data retrieval by avoiding full table scans, targeting reduced query latency.
+- **Caching with Redis**: Use Redis to cache task lists, bypassing database queries to achieve 50-80% latency reduction.
+- **Query Batching**: Combine multiple insert operations into a single query for bulk operations, aiming to cut latency by 50-80%.
+- **Pagination**: Limit the number of rows fetched per query for large datasets, speeding up queries by 2-10x.
+- **Connection Pooling**: Reuse database connections to handle high load efficiently, reducing latency by 30-50%.
+- **Asynchronous Queries**: Execute queries in parallel across multiple databases, cutting response time by 30-50% for multi-database calls.
+
+The application will include a React frontend where users can securely configure optimization settings, query types, and cloud architecture, run performance tests using Locust, and view results in Grafana, comparing unoptimized and optimized performance metrics.
+
+## Current State
+
+The project currently includes the infrastructure setup for a Kubernetes cluster on AWS EC2 instances, automated with Terraform and Ansible:
+
+- **Terraform**: Provisions EC2 instances (control plane, workers) and generates an Ansible inventory file (`_infrastructure/ansible/inventory.ini`) using a template.
+- **Ansible**: Configures the Kubernetes cluster by installing dependencies (Docker, kubeadm), initializing the control plane, joining worker nodes, and deploying the Calico CNI with a `192.168.0.0/16` CIDR.
+- **Taskfile**: Simplifies infrastructure management with commands for creating/destroying the cluster and running Ansible playbooks.
+
+No Kubernetes manifests (e.g., `backend.yaml`, `frontend.yaml`, `locust.yaml`) or application components (React frontend, backend API, databases) have been implemented yet.
+
+## Prerequisites
+
+- **AWS Account**: With permissions to create EC2 instances, security groups, and Route 53 records.
+- **Terraform**: Version 1.5+ for infrastructure provisioning.
+- **Ansible**: Version 2.14+ for cluster configuration.
+- **Taskfile**: Version 3+ for task automation (`task` CLI).
+- **SSH Key**: Configured at `~/.ssh/id_rsa` for accessing EC2 instances.
+- **kubectl**: For interacting with the Kubernetes cluster (post-setup).
+
+## Setup Instructions
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/jmath1/PerformanceGuru.git
+cd performance_guru
+```
+
+### 2. Install Taskfile CLI
+
+Install the Taskfile CLI (`task`) to run tasks defined in `Taskfile.yml`:
+
+```bash
+# On macOS
+brew install go-task
+
+# On Ubuntu
+sudo snap install task --classic
+```
+
+### 3. Provision Infrastructure
+
+Create the Kubernetes cluster infrastructure using Terraform:
+
+```bash
+task create_cluster_infra
+```
+
+This runs:
+
+- `terraform init` to initialize the Terraform working directory.
+- `terraform apply` to provision EC2 instances and generate `_infrastructure/ansible/inventory.ini`.
+
+### 4. Configure Kubernetes Cluster
+
+Run the Ansible playbook to set up the Kubernetes cluster:
+
+```bash
+task apb setup_k8s
+```
+
+This executes:
+
+- `ansible-playbook -i _infrastructure/ansible/inventory.ini _infrastructure/ansible/playbooks/setup_k8s.yml`
+
+### 5. Fetch Kubeconfig
+
+Retrieve the `kubeconfig` file to your local machine (`/Users/<username>/.kube/config`):
+
+```bash
+task apb fetch_kubeconfig
+```
+
+This executes:
+
+- `ansible-playbook -i _infrastructure/ansible/inventory.ini _infrastructure/ansible/playbooks/fetch_kubeconfig.yml`
+
+### 6. Verify Cluster
+
+Check the cluster status:
+
+```bash
+kubectl get nodes
+```
+
+Expected output includes the control plane (`44.202.35.11` or `54.166.99.218`) and workers (`54.196.57.81`, `34.227.21.153`, `54.166.99.218`) as `Ready`.
+
+### 7. Destroy Infrastructure (Optional)
+
+To tear down the cluster:
+
+```bash
+task destroy_cluster_infra
+```
+
+This runs:
+
+- `terraform destroy` to remove all provisioned resources.
+
+## Project Structure
+
+```
+performance_guru/
+├── _infrastructure/
+│   ├── ansible/
+│   │   ├── inventory.ini        # Generated by Terraform
+│   │   ├── playbooks/
+│   │   │   ├── setup_k8s.yml    # Configures Kubernetes cluster
+│   │   │   ├── fetch_kubeconfig.yml # Fetches kubeconfig to local machine
+│   │   ├── roles/
+│   │   │   ├── control_plane/   # Initializes Kubernetes control plane
+│   │   │   ├── worker/          # Joins worker nodes
+│   │   │   ├── kubeconfig/      # Manages kubeconfig
+│   │   │   ├── calico/         # Installs Calico CNI
+│   │   │   ├── common/         # Installs common dependencies
+│   │   │   ├── docker/         # Installs Docker
+│   │   │   ├── kubernetes/     # Installs kubeadm, kubectl, kubelet
+│   ├── terraform/
+│   │   ├── main.tf             # EC2 instance provisioning
+│   │   ├── inventory.tmpl      # Ansible inventory template
+├── Taskfile.yml                # Task automation for infrastructure
+├── README.md                   # This file
+```
+
+## To-Do List
+
+- [ ] **Develop Backend API**: Create a task management API (e.g., Django or Flask) with endpoints for tasks, supporting PostgreSQL and MongoDB.
+- [ ] **Develop React Frontend**: Build a React application to configure optimization settings, query types, and cloud architecture, with secure authentication.
+- [ ] **Implement Databases**:
+  - Deploy PostgreSQL via Helm for relational data.
+  - Deploy MongoDB for non-relational data.
+  - Deploy Redis for caching.
+- [ ] **Create Kubernetes Manifests**:
+  - Write `k8s/backend.yaml` for the API deployment.
+  - Write `k8s/frontend.yaml` for the React frontend.
+  - Write `k8s/locust.yaml` for Locust load testing.
+- [ ] **Set Up Monitoring**:
+  - Deploy Prometheus and Grafana via Helm.
+  - Create Grafana dashboards with panels for unoptimized (e.g., ID: 2) and optimized (e.g., ID: 3) metrics.
+- [ ] **Implement Optimizations**:
+  - Add indexing on `user_id` (PostgreSQL) and `task_id` (MongoDB).
+  - Integrate Redis caching for task lists.
+  - Implement query batching for bulk inserts.
+  - Add pagination to limit query results.
+  - Configure connection pooling for database connections.
+  - Enable asynchronous queries for parallel execution.
+- [ ] **Add Load Testing**: Configure Locust to simulate user traffic and measure performance.
+- [ ] **Secure Cluster**: Restrict Kubernetes API server port (`6443`) and configure SSL for `k8s-control.jonathanmath.com` using AWS Route 53 and ACM.
+- [ ] **Document Application**: Update README with application setup and usage instructions once implemented.
+
+## Troubleshooting
+
+- **Ansible Errors**:
+
+  - Run playbooks with verbose output:
+    ```bash
+    task apb setup_k8s -- -vvv
+    ```
+  - Check SSH connectivity: `ssh -i ~/.ssh/id_rsa ubuntu@44.202.35.11`.
+
+- **Terraform Issues**:
+
+  - Verify AWS credentials: `aws configure`.
+  - Check Terraform logs: `terraform -chdir=./_infrastructure/terraform apply -debug`.
+
+- **Kubernetes Issues**:
+
+  - Verify cluster state: `kubectl get nodes`.
+  - Check Calico pods: `kubectl get pods -n kube-system | grep calico`.
+
+- **Join Token Issues**:
+  - Manually generate a join token:
+    ```bash
+    ssh -i ~/.ssh/id_rsa ubuntu@44.202.35.11
+    sudo kubeadm token create --print-join-command
+    ```
+
+## Contributing
+
+Contributions are welcome! Please submit pull requests or open issues for bugs, feature requests, or documentation improvements.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## References
+
+- [Kubernetes Documentation](https://kubernetes.io/docs/home/)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Ansible Documentation](https://docs.ansible.com/ansible/latest/)
+- [Taskfile](https://taskfile.dev/)
+- [Calico CNI](https://docs.projectcalico.org/)
