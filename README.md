@@ -141,6 +141,8 @@ performance_guru/
 
 ## To-Do List
 
+- [x] **Create Terraform**: Create terraform that will dynamically provision worker nodes and a control plane. It should also create an ansible inventory file for use in ansible.
+- [x] **Create Ansible Playbooks**: Create ansible playboks to configure the kubernetes cluster and grab the kube config file so we can easily just deploying services to kubernetes from our computer.
 - [ ] **Develop Backend API**: Create a task management API (e.g., Django or Flask) with endpoints for tasks, supporting PostgreSQL and MongoDB.
 - [ ] **Develop React Frontend**: Build a React application to configure optimization settings, query types, and cloud architecture, with secure authentication.
 - [ ] **Implement Databases**:
