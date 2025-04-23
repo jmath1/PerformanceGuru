@@ -60,7 +60,7 @@ sudo snap install task --classic
 Create the Kubernetes cluster infrastructure using Terraform:
 
 ```bash
-task create_cluster_infra
+task tf_apply
 ```
 
 This runs:
@@ -100,7 +100,7 @@ Check the cluster status:
 kubectl get nodes
 ```
 
-Expected output includes the control plane (`44.202.35.11` or `54.166.99.218`) and workers (`54.196.57.81`, `34.227.21.153`, `54.166.99.218`) as `Ready`.
+Expected output includes the control plane and workers as `Ready`.
 
 ### 7. Destroy Infrastructure (Optional)
 
@@ -169,14 +169,6 @@ performance_guru/
 
 ## Troubleshooting
 
-- **Ansible Errors**:
-
-  - Run playbooks with verbose output:
-    ```bash
-    task apb setup_k8s -- -vvv
-    ```
-  - Check SSH connectivity: `ssh -i ~/.ssh/id_rsa ubuntu@44.202.35.11`.
-
 - **Terraform Issues**:
 
   - Verify AWS credentials: `aws configure`.
@@ -186,13 +178,6 @@ performance_guru/
 
   - Verify cluster state: `kubectl get nodes`.
   - Check Calico pods: `kubectl get pods -n kube-system | grep calico`.
-
-- **Join Token Issues**:
-  - Manually generate a join token:
-    ```bash
-    ssh -i ~/.ssh/id_rsa ubuntu@44.202.35.11
-    sudo kubeadm token create --print-join-command
-    ```
 
 ## Contributing
 

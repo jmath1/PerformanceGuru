@@ -4,12 +4,13 @@ vars:
   namespace: "django-app"
 
 tasks:
-  create_cluster_infra:
+  tf_apply:
     desc: Create a Minikube cluster using terraform
     cmds:
       - terraform -chdir=./_infrastructure/terraform init
-      - terraform -chdir=./_infrastructure/terraform apply
-  destroy_cluster_infra:
+      - terraform -chdir=./_infrastructure/terraform apply --auto-approve
+
+  tf_destroy:
     desc: Destroy the Minikube cluster using terraform
     cmds:
       - terraform -chdir=./_infrastructure/terraform destroy
@@ -19,9 +20,19 @@ tasks:
       - playbook=$(echo {{ .CLI_ARGS }} | cut -d " " -f1);
         ansible-playbook -i _infrastructure/ansible/inventory.ini _infrastructure/ansible/playbooks/${playbook}.yml
 
+  create_everything:
+    desc: Run everything
+    cmds:
+      - task tf_apply
+      - task apb -- setup_k8s
+      - task apb -- fetch_kube_config
+      - task deploy_k8s
+
   deploy_k8s:
     desc: Apply the Kubernetes manifests
     cmds:
+      - kubectl apply -k "github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/ecr/?ref=release-1.30"
+      - kubectl apply -f _infrastructure/kubernetes/manifests/storage/ebs-sc.yml
       - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/namespace.yml
 
       - kubectl apply -f _infrastructure/kubernetes/manifests/default/redis/redis-service.yml
@@ -48,3 +59,7 @@ tasks:
       - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/grafana/grafana-datasources-configmap.yml
       - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/grafana/grafana-service.yml
       - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/grafana/grafana-deployment.yml
+  destroy_k8s:
+    desc: Destroy the Kubernetes cluster
+    cmds:
+      - ./destroy_k8s.sh
