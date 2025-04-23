@@ -1,3 +1,4 @@
+# filepath: /Users/jmath/performance_guru/_infrastructure/kubernetes/manifests/default/postgres/postgres-pv.yml
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -13,8 +14,6 @@ spec:
   storageClassName: standard
   hostPath:
     path: /mnt/postgres-data
-  claimRef:
-    name: postgres-pvc
   nodeAffinity:
     required:
       nodeSelectorTerms:
