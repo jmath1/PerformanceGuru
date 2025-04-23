@@ -18,3 +18,33 @@ tasks:
     cmds:
       - playbook=$(echo {{ .CLI_ARGS }} | cut -d " " -f1);
         ansible-playbook -i _infrastructure/ansible/inventory.ini _infrastructure/ansible/playbooks/${playbook}.yml
+
+  deploy_k8s:
+    desc: Apply the Kubernetes manifests
+    cmds:
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/namespace.yml
+
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/redis/redis-service.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/redis/redis-deployment.yml
+
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/mongodb/mongodb-pv.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/mongodb/mongodb-pvc.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/mongodb/mongodb-service.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/mongodb/mongodb-deployment.yml
+
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/postgres/postgres-pv.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/postgres/postgres-pvc.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/postgres/postgres-service.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/default/postgres/postgres-deployment.yml
+
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/prometheus/prometheus-configmap.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/prometheus/prometheus-pv.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/prometheus/prometheus-pvc.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/prometheus/prometheus-service.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/prometheus/prometheus-deployment.yml
+
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/grafana/grafana-pv.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/grafana/grafana-pvc.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/grafana/grafana-datasources-configmap.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/grafana/grafana-service.yml
+      - kubectl apply -f _infrastructure/kubernetes/manifests/monitoring/grafana/grafana-deployment.yml
