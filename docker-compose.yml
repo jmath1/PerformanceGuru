@@ -1,41 +1,50 @@
+version: "3.8"
+
 services:
   node:
     image: node:18
     container_name: node
     volumes:
-      - ./node_server/server.js:/app/server.js
-      - ./node_server/package.json:/app/package.json
-      - ./node_server/package-lock.json:/app/package-lock.json
+      - ./node_server:/app
     working_dir: /app
     ports:
       - "3001:3001"
     command: sh -c "npm install && npm start"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - mongodb
+      - postgres
+
   redis:
     image: redis:7
     container_name: redis
-    ports:
-      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - .env
+
   mongodb:
     image: mongo:5
     container_name: mongodb
-    ports:
-      - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     volumes:
       - mongo-storage:/data/db
+    env_file:
+      - .env
   postgres:
     image: postgres:15
     container_name: postgres
-    ports:
-      - "5432:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${PG_DATABASE}
     volumes:
       - postgres-storage:/var/lib/postgresql/data
+    env_file:
+      - .env
 volumes:
   mongo-storage:
     driver: local
