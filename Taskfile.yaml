@@ -63,3 +63,14 @@ tasks:
     desc: Destroy the Kubernetes cluster
     cmds:
       - ./destroy_k8s.sh
+
+  up:
+    desc: Run the docker-compose up command for metrics and main docker-compose
+    cmds:
+      - docker-compose -f metrics.docker-compose.yml up -d
+      - docker-compose -f docker-compose.yml up -d
+  down:
+    desc: Run the docker-compose down command for metrics and main docker-compose
+    cmds:
+      - docker-compose -f metrics.docker-compose.yml down
+      - docker-compose -f docker-compose.yml down
