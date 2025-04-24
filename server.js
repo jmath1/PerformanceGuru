@@ -248,7 +248,9 @@ app.post("/comments", async (req, res) => {
 app.post("/start-test", (req, res) => {
   const batchingFlag = config.batching ? "--batching=true" : "--batching=false";
   exec(
-    `locust -f locustfile.py --host=http://localhost:3000 --users=500 --spawn-rate=10 --run-time=60s --headless ${batchingFlag}`,
+    `locust -f locustfile.py --host=http://${
+      process.env.LOCUST_URL || "localhost"
+    }:3000 --users=500 --spawn-rate=10 --run-time=60s --headless ${batchingFlag}`,
     (err) => {
       if (err) console.error(err);
     }

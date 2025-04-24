@@ -10,7 +10,9 @@ import optimizationMetrics from "../config/optimizationMetrics";
 import grafanaMetrics from "../config/grafanaMetrics";
 import optimizations from "../config/optimizations";
 
-const GRAFANA_BASE_URL = "http://localhost:3000/d-solo";
+const GRAFANA_BASE_URL = `http://${
+  process.env.REACT_APP_GRAFANA_URL || "localhost"
+}:3000/d-solo`;
 const GRAFANA_PARAMS =
   "orgId=1&from=now-10m&to=now&timezone=browser&refresh=5s";
 
@@ -29,10 +31,17 @@ const PerformanceTest = () => {
     setIsTesting(true);
     setTestStatus("Running test...");
     try {
-      await axios.post(`http://localhost:3000/config/${activeTab}`, {
-        enable: optimized,
-      });
-      await axios.post("http://localhost:3000/start-test");
+      await axios.post(
+        `http://${
+          process.env.GRAFANA_URL || "localhost"
+        }:3000/config/${activeTab}`,
+        {
+          enable: optimized,
+        }
+      );
+      await axios.post(
+        `http://${process.env.GRAFANA_URL || "localhost"}:3000/start-test`
+      );
       setTestStatus(
         `Test completed! Observe the changes in the ${primaryMetric.metric.replace(
           /([A-Z])/g,
