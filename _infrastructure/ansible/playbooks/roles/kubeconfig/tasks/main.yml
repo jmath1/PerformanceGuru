@@ -6,7 +6,7 @@
     mode: "0700"
 
 - name: Check SSH connectivity to control plane
-  command: ssh -i {{ control_plane_key }} {{ control_plane_user }}@{{ control_plane_host }} true
+  command: ssh -i {{ control_plane_key }} {{ control_plane_user }}@{{ control_plane_host }} -o StrictHostKeyChecking=no true
   changed_when: false
   delegate_to: localhost
   register: ssh_result
@@ -48,7 +48,7 @@
 
 - name: Fetch API server certificate
   command: >
-    ssh -i {{ control_plane_key }} {{ control_plane_user }}@{{ control_plane_host }}
+    ssh -i {{ control_plane_key }} {{ control_plane_user }}@{{ control_plane_host }} -o StrictHostKeyChecking=no
     openssl x509 -in /etc/kubernetes/pki/apiserver.crt -noout -text
   changed_when: false
   delegate_to: localhost
