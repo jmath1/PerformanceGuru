@@ -28,67 +28,6 @@
       },
       "fieldConfig": {
         "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 0
-      },
-      "id": 1,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.5.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "mongodb_up{cluster_role=\"mongod\"}",
-          "refId": "A"
-        }
-      ],
-      "title": "MongoDB Uptime Status",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
           "color": {
             "mode": "palette-classic"
           },
@@ -144,9 +83,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 18,
-        "x": 6,
+        "h": 7,
+        "w": 24,
+        "x": 0,
         "y": 0
       },
       "id": 2,
@@ -170,8 +109,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "rate(process_cpu_seconds_total[1m])",
+          "editorMode": "code",
+          "expr": "rate(process_cpu_seconds_total{job=\"mongodb\"}[1m])",
           "legendFormat": "CPU Usage",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -243,7 +184,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 7
       },
       "id": 3,
       "options": {
@@ -266,8 +207,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "process_resident_memory_bytes",
+          "editorMode": "code",
+          "expr": "process_resident_memory_bytes{job=\"mongodb\"}",
           "legendFormat": "Resident Memory",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -339,7 +282,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 7
       },
       "id": 4,
       "options": {
@@ -362,8 +305,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "rate(process_network_receive_bytes_total[1m])",
+          "editorMode": "code",
+          "expr": "rate(process_network_receive_bytes_total{job=\"mongodb\"}[1m])",
           "legendFormat": "Receive",
+          "range": true,
           "refId": "A"
         },
         {
@@ -371,8 +316,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "rate(process_network_transmit_bytes_total[1m])",
+          "editorMode": "code",
+          "expr": "rate(process_network_transmit_bytes_total{job=\"mongodb\"}[1m])",
           "legendFormat": "Transmit",
+          "range": true,
           "refId": "B"
         }
       ],
@@ -445,7 +392,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 15
       },
       "id": 5,
       "options": {
@@ -468,8 +415,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "process_open_fds",
+          "editorMode": "code",
+          "expr": "process_open_fds{job=\"mongodb\"}",
           "legendFormat": "Open FDs",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -541,7 +490,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 15
       },
       "id": 6,
       "options": {
@@ -564,8 +513,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "go_goroutines",
+          "editorMode": "code",
+          "expr": "go_goroutines{job=\"mongodb\"}",
           "legendFormat": "Goroutines",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -637,7 +588,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 23
       },
       "id": 7,
       "options": {
@@ -660,8 +611,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "go_memstats_heap_alloc_bytes",
+          "editorMode": "code",
+          "expr": "go_memstats_heap_alloc_bytes{job=\"mongodb\"}",
           "legendFormat": "Heap Alloc",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -733,7 +686,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 23
       },
       "id": 8,
       "options": {
@@ -756,78 +709,15 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "go_gc_duration_seconds{quantile=\"0.5\"}",
+          "editorMode": "code",
+          "expr": "go_gc_duration_seconds{quantile=\"0.5\", job=\"mongodb\"}",
           "legendFormat": "Median GC Pause",
+          "range": true,
           "refId": "A"
         }
       ],
       "title": "GC Pause Duration (Median)",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 100
-              },
-              {
-                "color": "red",
-                "value": 500
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 32
-      },
-      "id": 9,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.5.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "collector_scrape_time_ms{collector=\"general\",exporter=\"mongodb\"}",
-          "refId": "A"
-        }
-      ],
-      "title": "Exporter Scrape Duration",
-      "type": "stat"
     }
   ],
   "preload": false,
@@ -841,6 +731,6 @@
   "timezone": "browser",
   "title": "MongoDB Performance",
   "uid": "eejuqk347e6m8c",
-  "version": 2,
+  "version": 5,
   "weekStart": ""
 }
