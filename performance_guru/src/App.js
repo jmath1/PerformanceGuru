@@ -1,10 +1,10 @@
 import React from "react";
-import OptimizationTabs from "./pages/OptimizationTabs";
+import PerformanceTest from "./pages/PerformanceTest";
 
 function App() {
   return (
     <div>
-      <OptimizationTabs />
+      <PerformanceTest />
     </div>
   );
 }
