@@ -1,0 +1,9 @@
+# filepath: /Users/jmath/performance_guru/_infrastructure/grafana/provisioning/datasources/prometheus-datasource.yml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://host.docker.internal:9090
+    isDefault: true
+    editable: true
