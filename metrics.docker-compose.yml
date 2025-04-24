@@ -16,6 +16,7 @@ services:
       - ./_infrastructure/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./_infrastructure/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./_infrastructure/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./_infrastructure/grafana/config/grafana.ini:/etc/grafana/grafana.ini
 
   locust_exporter:
     image: containersol/locust_exporter
@@ -41,3 +42,6 @@ services:
       - MONGODB_URI=mongodb://host.docker.internal:27017
     ports:
       - "9216:9216"
+volumes:
+  grafana-data:
+    driver: local
