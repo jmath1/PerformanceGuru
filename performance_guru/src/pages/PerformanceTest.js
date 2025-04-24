@@ -1,6 +1,6 @@
-import React, { useState, useContext } from "react"; // Add useContext
+import React, { useState, useContext } from "react";
 import axios from "axios";
-import { ThemeContext } from "../contexts/ThemeContext"; // Import ThemeContext
+import { ThemeContext } from "../contexts/ThemeContext";
 import OptimizationTabsNav from "../components/OptimizationTabsNav";
 import TestControls from "../components/TestControls";
 import PrimaryMetricGraph from "../components/graphs/PrimaryMetricGraph";
@@ -15,7 +15,7 @@ const GRAFANA_PARAMS =
   "orgId=1&from=now-10m&to=now&timezone=browser&refresh=5s";
 
 const PerformanceTest = () => {
-  const { theme } = useContext(ThemeContext); // Access theme from context
+  const { theme } = useContext(ThemeContext);
 
   const [activeTab, setActiveTab] = useState("indexing");
   const [testStatus, setTestStatus] = useState("Not Testing");
