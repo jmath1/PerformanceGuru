@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react"; // Add useContext
 import axios from "axios";
+import { ThemeContext } from "../contexts/ThemeContext"; // Import ThemeContext
 import OptimizationTabsNav from "../components/OptimizationTabsNav";
 import TestControls from "../components/TestControls";
 import PrimaryMetricGraph from "../components/graphs/PrimaryMetricGraph";
@@ -11,15 +12,18 @@ import optimizations from "../config/optimizations";
 
 const GRAFANA_BASE_URL = "http://localhost:3000/d-solo";
 const GRAFANA_PARAMS =
-  "orgId=1&from=now-10m&to=now&timezone=browser&refresh=5s&kiosk";
-const generateGrafanaUrl = (dashboard, panelId) =>
-  `${GRAFANA_BASE_URL}/${dashboard}/performance?${GRAFANA_PARAMS}&panelId=${panelId}&theme=light`;
+  "orgId=1&from=now-10m&to=now&timezone=browser&refresh=5s";
 
 const PerformanceTest = () => {
+  const { theme } = useContext(ThemeContext); // Access theme from context
+
   const [activeTab, setActiveTab] = useState("indexing");
-  const [testStatus, setTestStatus] = useState("");
+  const [testStatus, setTestStatus] = useState("Not Testing");
   const [isTesting, setIsTesting] = useState(false);
   const [activeMetricTab, setActiveMetricTab] = useState("mongodb");
+
+  const generateGrafanaUrl = (dashboard, panelId) =>
+    `${GRAFANA_BASE_URL}/${dashboard}/performance?${GRAFANA_PARAMS}&panelId=${panelId}&theme=${theme}`;
 
   const runTest = async (optimized) => {
     setIsTesting(true);
@@ -58,60 +62,72 @@ const PerformanceTest = () => {
   })();
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        Performance Optimization Demo
-      </h1>
+    <div className={`min-h-screen bg-gray-100 ${theme}`}>
+      <div
+        className={`container mx-auto p-6 ${
+          theme === "dark" ? "dark" : "light"
+        }`}
+      >
+        <h1
+          className={`text-3xl font-bold mb-6 ${
+            theme === "dark" ? "dark" : "light"
+          }`}
+        >
+          Performance Optimization Demo
+        </h1>
 
-      <OptimizationTabsNav
-        optimizations={optimizations}
-        activeTab={activeTab}
-        setActiveTab={(id) => {
-          setActiveTab(id);
-          const metrics = optimizationMetrics[id];
-          setActiveMetricTab(
-            metrics.mongodb.length
-              ? "mongodb"
-              : metrics.redis.length
-              ? "redis"
-              : "postgres"
-          );
-        }}
-      />
-
-      <div>
-        <h2 className="text-xl font-semibold mb-2 text-gray-700">
-          {currentOpt.name}
-        </h2>
-        <p className="mb-6 text-gray-600">{currentOpt.description}</p>
-
-        <TestControls
-          runTest={runTest}
-          isTesting={isTesting}
-          testStatus={testStatus}
+        <OptimizationTabsNav
+          optimizations={optimizations}
+          activeTab={activeTab}
+          setActiveTab={(id) => {
+            setActiveTab(id);
+            const metrics = optimizationMetrics[id];
+            setActiveMetricTab(
+              metrics.mongodb.length
+                ? "mongodb"
+                : metrics.redis.length
+                ? "redis"
+                : "postgres"
+            );
+          }}
         />
 
-        <PrimaryMetricGraph
-          primaryMetric={primaryMetric}
-          generateGrafanaUrl={generateGrafanaUrl}
-        />
+        <div>
+          <h2 className={`text-xl font-semibold mb-2 ${theme}`}>
+            {currentOpt.name}
+          </h2>
+          <p className={`mb-6 text-gray-600 ${theme}`}>
+            {currentOpt.description}
+          </p>
 
-        <DatabaseMetricsTabs
-          relevantMetrics={relevantMetrics}
-          activeMetricTab={activeMetricTab}
-          setActiveMetricTab={setActiveMetricTab}
-        />
+          <TestControls
+            runTest={runTest}
+            isTesting={isTesting}
+            testStatus={testStatus}
+          />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {relevantMetrics[activeMetricTab].map((metric) => (
-            <MetricGraph
-              key={metric}
-              metric={metric}
-              db={activeMetricTab}
-              generateGrafanaUrl={generateGrafanaUrl}
-              grafanaMetrics={grafanaMetrics}
-            />
-          ))}
+          <PrimaryMetricGraph
+            primaryMetric={primaryMetric}
+            generateGrafanaUrl={generateGrafanaUrl}
+          />
+
+          <DatabaseMetricsTabs
+            relevantMetrics={relevantMetrics}
+            activeMetricTab={activeMetricTab}
+            setActiveMetricTab={setActiveMetricTab}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {relevantMetrics[activeMetricTab].map((metric) => (
+              <MetricGraph
+                key={metric}
+                metric={metric}
+                db={activeMetricTab}
+                generateGrafanaUrl={generateGrafanaUrl}
+                grafanaMetrics={grafanaMetrics}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

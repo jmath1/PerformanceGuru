@@ -11,9 +11,7 @@ const PrimaryMetricGraph = ({ primaryMetric, generateGrafanaUrl }) => {
     .replace(/^./, (str) => str.toUpperCase());
   return (
     <div className="mb-8">
-      <h3 className="text-lg font-semibold mb-2 text-gray-700">
-        Primary Metric: {title}
-      </h3>
+      <h3 className="text-lg font-semibold mb-2 ">Primary Metric: {title}</h3>
       <iframe
         src={url}
         width="100%"
