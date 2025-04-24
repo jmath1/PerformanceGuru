@@ -3,9 +3,9 @@ services:
     image: node:18
     container_name: node
     volumes:
-      - ./server.js:/app/server.js
-      - ./package.json:/app/package.json
-      - ./package-lock.json:/app/package-lock.json
+      - ./node_server/server.js:/app/server.js
+      - ./node_server/package.json:/app/package.json
+      - ./node_server/package-lock.json:/app/package-lock.json
     working_dir: /app
     ports:
       - "3001:3001"
