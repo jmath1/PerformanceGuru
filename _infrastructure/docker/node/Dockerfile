@@ -1,14 +1,22 @@
-# create a dockerfile for my server.js node application
-FROM node:18
-# Set the working directory
-WORKDIR /usr/src/app
-# Copy package.json and package-lock.json
+FROM ubuntu:22.04
+
+WORKDIR /app
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    curl \
+    python3 \
+    python3-pip \
+    python3-venv \
+    && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
-# Install dependencies
 RUN npm install
-# Copy the rest of the application code
-COPY server.js ./
-# Expose the port the app runs on
+RUN python3 -m venv /app/venv && \
+    /app/venv/bin/pip install locust==2.15.1
+ENV PATH="/app/venv/bin:$PATH"
+COPY . .
 EXPOSE 3001
-# Command to run the application
 CMD ["node", "server.js"]
