@@ -6,3 +6,4 @@ __pycache__/
 *.tfstate
 inventory.ini
 _infrastructure/terraform/terraform.tfstate.backup
+venv/

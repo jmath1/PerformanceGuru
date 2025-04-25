@@ -11,7 +11,7 @@ import grafanaMetrics from "../config/grafanaMetrics";
 import optimizations from "../config/optimizations";
 
 const GRAFANA_BASE_URL = `http://${
-  process.env.REACT_APP_GRAFANA_URL || "0.0.0.0"
+  process.env.REACT_APP_GRAFANA_URL || "localhost"
 }:3000/d-solo`;
 const GRAFANA_PARAMS =
   "orgId=1&from=now-10m&to=now&timezone=browser&refresh=5s";
@@ -34,7 +34,7 @@ const PerformanceTest = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/status`);
+        const { data } = await axios.get(`${API_BASE_URL}/config/status`);
         setStatusLog(data.statusLog);
       } catch (err) {
         console.error("Failed to fetch status:", err);
@@ -42,7 +42,7 @@ const PerformanceTest = () => {
     };
 
     fetchStatus();
-    const interval = setInterval(fetchStatus, 5000); // Poll every 5 seconds
+    const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -52,7 +52,6 @@ const PerformanceTest = () => {
     setTestResults(null);
 
     try {
-      // Apply configuration
       const configResponse = await axios.post(
         `${API_BASE_URL}/config/${activeTab}`,
         { enable: optimized }
@@ -63,16 +62,16 @@ const PerformanceTest = () => {
         [activeTab]: configResponse.data.statusLog,
       }));
 
-      // Run Locust test
       setTestStatus("Running performance test...");
-      const testResponse = await axios.post(`${API_BASE_URL}/start-test`, {
+      const testResponse = await axios.post(`${API_BASE_URL}/test/start-test`, {
         optimization: activeTab,
       });
       setTestStatus(
-        `Test completed! Observe the changes in the ${primaryMetric.metric.replace(
-          /([A-Z])/g,
-          " $1"
-        )} graph below.`
+        `Test completed! Observe the changes in the ${
+          primaryMetric
+            ? primaryMetric.metric.replace(/([A-Z])/g, " $1")
+            : "metrics"
+        } graph below.`
       );
       setTestResults(testResponse.data.results);
     } catch (err) {
@@ -119,7 +118,7 @@ const PerformanceTest = () => {
           activeTab={activeTab}
           setActiveTab={(id) => {
             setActiveTab(id);
-            setTestResults(null); // Clear previous results
+            setTestResults(null);
             const metrics = optimizationMetrics[id];
             setActiveMetricTab(
               metrics.mongodb.length
@@ -163,7 +162,6 @@ const PerformanceTest = () => {
             testStatus={testStatus}
           />
 
-          {/* Locust Test Results */}
           {testResults && (
             <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
               <h3 className="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-200">

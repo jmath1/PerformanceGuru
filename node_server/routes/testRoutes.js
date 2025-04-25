@@ -10,7 +10,9 @@ const router = express.Router();
 router.post("/start-test", async (req, res) => {
   const { optimization } = req.body;
   if (!optimization || !config[optimization]) {
-    return res.status(400).json({ message: "Invalid or missing optimization" });
+    return res
+      .status(400)
+      .json({ message: `Invalid or missing optimization - ${optimization}` });
   }
 
   statusLog[optimization].status = "Running test";
@@ -20,7 +22,7 @@ router.post("/start-test", async (req, res) => {
 
   try {
     const flags = `--${optimization}=${config[optimization]}`;
-    const locustCommand = `locust -f locustfile.py --host=http://localhost:3001 --users=500 --spawn-rate=10 --run-time=60s --headless --csv=locust_results ${flags}`;
+    const locustCommand = `/bin/bash -c "source /app/venv/bin/activate && locust -f locustfile.py --host=http://${process.env.NODE_HOSTNAME}:${process.env.NODE_PORT} --users=500 --spawn-rate=10 --run-time=60s --headless ${flags} --csv=locust_results_stats"`;
     const { stdout, stderr } = await execAsync(locustCommand);
 
     statusLog[optimization].commands.push(`Locust: ${locustCommand}`);
