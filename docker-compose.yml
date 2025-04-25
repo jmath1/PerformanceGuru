@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   node:
     build:
@@ -12,8 +10,6 @@ services:
     ports:
       - "3001:3001"
     command: /bin/bash -c "npm install && npm start"
-    volumes:
-      - ./locustfile.py:/app/locustfile.py
     env_file:
       - .env
     depends_on:
@@ -27,6 +23,8 @@ services:
     command: redis-server --requirepass ${REDIS_PASSWORD}
     env_file:
       - .env
+    ports:
+      - "6379:6379"
 
   mongodb:
     image: mongo:5
@@ -38,6 +36,8 @@ services:
       - mongo-storage:/data/db
     env_file:
       - .env
+    ports:
+      - "27017:27017"
   postgres:
     image: postgres:15
     container_name: postgres
@@ -49,6 +49,8 @@ services:
       - postgres-storage:/var/lib/postgresql/data
     env_file:
       - .env
+    ports:
+      - "5432:5432"
 
   prometheus:
     image: prom/prometheus
@@ -80,26 +82,42 @@ services:
     image: prometheuscommunity/postgres-exporter
     environment:
       - DATA_SOURCE_NAME=postgresql://admin:password@host.docker.internal:5432/mydb?sslmode=disable
+      - POSTGRES_EXPORTER_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_EXPORTER_USER=${PG_USER}
+      - POSTGRES_EXPORTER_DB=${PG_DATABASE}
+      - POSTGRES_EXPORTER_PORT=${PG_PORT}
     ports:
       - "9187:9187"
     depends_on:
       - postgres
+    env_file:
+      - .env
   redis_exporter:
     image: oliver006/redis_exporter
     environment:
       - REDIS_ADDR=host.docker.internal:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_EXPORTER_PASSWORD=${REDIS_EXPORTER_PASSWORD}
     ports:
       - "9121:9121"
     depends_on:
       - redis
+    env_file:
+      - .env
   mongodb_exporter:
     image: bitnami/mongodb-exporter:latest
     environment:
       - MONGODB_URI=mongodb://host.docker.internal:27017
+      - MONGODB_USER=${MONGO_USER}
+      - MONGODB_PASSWORD=${MONGO_PASSWORD}
+      - MONGODB_DATABASE=${MONGO_DATABASE}
     ports:
       - "9216:9216"
     depends_on:
       - mongodb
+    env_file:
+      - .env
+
 volumes:
   mongo-storage:
     driver: local
