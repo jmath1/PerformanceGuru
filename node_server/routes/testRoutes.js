@@ -3,13 +3,14 @@ const { exec } = require("child_process");
 const util = require("util");
 const fs = require("fs").promises;
 const execAsync = util.promisify(exec);
-const { statusLog, config } = require("../config/state");
+const { config, statusLog } = require("../config/state");
 const { parseLocustResults } = require("../helpers/locustHelper");
 const router = express.Router();
 
 router.post("/start-test", async (req, res) => {
   const { optimization } = req.body;
-  if (!optimization || !config[optimization]) {
+
+  if (!optimization) {
     return res
       .status(400)
       .json({ message: `Invalid or missing optimization - ${optimization}` });
@@ -21,8 +22,7 @@ router.post("/start-test", async (req, res) => {
   );
 
   try {
-    const flags = `--${optimization}=${config[optimization]}`;
-    const locustCommand = `/bin/bash -c "source /app/venv/bin/activate && locust -f locustfile.py --host=http://${process.env.NODE_HOSTNAME}:${process.env.NODE_PORT} --users=500 --spawn-rate=10 --run-time=60s --headless ${flags} --csv=locust_results_stats"`;
+    const locustCommand = `/app/locust_tests# /bin/bash -c "source /app/venv/bin/activate && locust -f ${optimization}_test.py --host=${process.env.NODE_HOSTNAME}:${process.env.NODE_PORT} --users=1000 --spawn-rate=10 --run-time=60s --headless --csv=locust_results"`;
     const { stdout, stderr } = await execAsync(locustCommand);
 
     statusLog[optimization].commands.push(`Locust: ${locustCommand}`);
