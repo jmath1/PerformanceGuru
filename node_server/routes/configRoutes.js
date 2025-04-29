@@ -5,8 +5,26 @@ const { config, statusLog } = require("../config/state");
 
 const router = express.Router();
 
+function disableAllConfig() {
+  config.indexing = false;
+  config.caching = false;
+  config.batching = false;
+  config.pagination = false;
+  config.pooling = false;
+  config.async = false;
+
+  statusLog.indexing.status = "Disabled";
+  statusLog.caching.status = "Disabled";
+  statusLog.batching.status = "Disabled";
+  statusLog.pagination.status = "Disabled";
+  statusLog.pooling.status = "Disabled";
+  statusLog.async.status = "Disabled";
+}
+
 router.post("/indexing", async (req, res) => {
+  disableAllConfig();
   const { enable } = req.body;
+  console.log(enable);
   statusLog.indexing.status = enable ? "Enabling" : "Disabling";
   statusLog.indexing.commands.push(
     enable ? "Creating indexes..." : "Dropping indexes..."
@@ -58,6 +76,7 @@ router.post("/indexing", async (req, res) => {
 });
 
 router.post("/caching", async (req, res) => {
+  disableAllConfig();
   const { enable } = req.body;
   statusLog.caching.status = enable ? "Enabling" : "Disabling";
   statusLog.caching.commands.push(
@@ -94,6 +113,7 @@ router.post("/caching", async (req, res) => {
 });
 
 router.post("/batching", (req, res) => {
+  disableAllConfig();
   const { enable } = req.body;
   statusLog.batching.status = enable ? "Enabling" : "Disabling";
   statusLog.batching.commands.push(
@@ -124,6 +144,7 @@ router.post("/batching", (req, res) => {
 });
 
 router.post("/pagination", (req, res) => {
+  disableAllConfig();
   const { enable } = req.body;
   statusLog.pagination.status = enable ? "Enabling" : "Disabling";
   statusLog.pagination.commands.push(
@@ -154,6 +175,7 @@ router.post("/pagination", (req, res) => {
 });
 
 router.post("/pooling", async (req, res) => {
+  disableAllConfig();
   const { enable } = req.body;
   statusLog.pooling.status = enable ? "Enabling" : "Disabling";
   statusLog.pooling.commands.push(
@@ -198,6 +220,7 @@ router.post("/pooling", async (req, res) => {
 });
 
 router.post("/async", (req, res) => {
+  disableAllConfig();
   const { enable } = req.body;
   statusLog.async.status = enable ? "Enabling" : "Disabling";
   statusLog.async.commands.push(

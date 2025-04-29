@@ -1,4 +1,4 @@
-let config = {
+exports.config = {
   indexing: false,
   caching: false,
   batching: false,
@@ -7,7 +7,7 @@ let config = {
   async: false,
 };
 
-let statusLog = {
+exports.statusLog = {
   indexing: { status: "Idle", commands: [] },
   caching: { status: "Idle", commands: [] },
   batching: { status: "Idle", commands: [] },
@@ -15,5 +15,3 @@ let statusLog = {
   pooling: { status: "Idle", commands: [] },
   async: { status: "Idle", commands: [] },
 };
-
-module.exports = { config, statusLog };
