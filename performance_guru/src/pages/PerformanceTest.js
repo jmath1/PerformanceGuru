@@ -9,15 +9,16 @@ import MetricGraph from "../components/graphs/MetricGraph";
 import optimizationMetrics from "../config/optimizationMetrics";
 import grafanaMetrics from "../config/grafanaMetrics";
 import optimizations from "../config/optimizations";
+import TestStatus from "../components/TestStatus";
 
 const GRAFANA_BASE_URL = `http://${
   process.env.REACT_APP_GRAFANA_URL || "localhost"
 }:3000/d-solo`;
 const GRAFANA_PARAMS =
   "orgId=1&from=now-10m&to=now&timezone=browser&refresh=5s";
-const API_BASE_URL = `http://${
-  process.env.REACT_APP_API_URL || "0.0.0.0"
-}:3001`;
+const API_BASE_URL = `http://${process.env.NODE_HOSTNAME || "0.0.0.0"}:${
+  process.env.NODE_PORT || 3001
+}`;
 
 const PerformanceTest = () => {
   const { theme } = useContext(ThemeContext);
@@ -65,6 +66,7 @@ const PerformanceTest = () => {
       setTestStatus("Running performance test...");
       const testResponse = await axios.post(`${API_BASE_URL}/test/start-test`, {
         optimization: activeTab,
+        testType: "performance",
       });
       setTestStatus(
         `Test completed! Observe the changes in the ${
@@ -73,7 +75,7 @@ const PerformanceTest = () => {
             : "metrics"
         } graph below.`
       );
-      setTestResults(testResponse.data.results);
+      setTestResults(testResponse.data.testResults);
     } catch (err) {
       console.error(err);
       setTestStatus(
@@ -100,16 +102,8 @@ const PerformanceTest = () => {
 
   return (
     <div className={`min-h-screen bg-gray-100 ${theme}`}>
-      <div
-        className={`container mx-auto p-6 ${
-          theme === "dark" ? "dark" : "light"
-        }`}
-      >
-        <h1
-          className={`text-3xl font-bold mb-6 ${
-            theme === "dark" ? "dark" : "light"
-          }`}
-        >
+      <div className={`container mx-auto p-6 ${theme}`}>
+        <h1 className={`text-3xl font-bold mb-6 ${theme}`}>
           Performance Optimization Demo
         </h1>
 
@@ -130,96 +124,75 @@ const PerformanceTest = () => {
           }}
         />
 
-        <div>
-          <h2 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300">
-            {currentOpt.name}
-          </h2>
-          <p className={`mb-6 ${theme}`}>{currentOpt.description}</p>
+        <TestStatus
+          currentOpt={currentOpt}
+          activeTab={activeTab}
+          statusLog={statusLog}
+        />
 
-          {/* Optimization Status and Commands */}
-          <div className={`mb-6 p-4 ${theme} rounded-lg shadow-sm`}>
-            <h3 className={`text-lg font-semibold mb-2 ${theme}`}>
-              Optimization Status
+        <TestControls
+          runTest={runTest}
+          isTesting={isTesting}
+          testStatus={testStatus}
+        />
+
+        {testResults && (
+          <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-200">
+              Performance Test Results
             </h3>
-            <p className={`${theme} mb-2`}>
-              Status: {statusLog[activeTab]?.status || "Idle"}
-            </p>
-            <div>
-              <h4 className={`text-sm font-medium ${theme}`}>
-                Executed Commands:
-              </h4>
-              <ul className={`list-disc pl-5 ${theme} text-sm mt-1`}>
-                {statusLog[activeTab]?.commands?.map((cmd, index) => (
-                  <li key={index}>{cmd}</li>
-                )) || <li>No commands executed yet.</li>}
-              </ul>
-            </div>
-          </div>
-
-          <TestControls
-            runTest={runTest}
-            isTesting={isTesting}
-            testStatus={testStatus}
-          />
-
-          {testResults && (
-            <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-200">
-                Performance Test Results
-              </h3>
-              {testResults.length > 0 ? (
-                <table className="w-full text-sm text-gray-600 dark:text-gray-400">
-                  <thead>
-                    <tr>
-                      <th className="text-left p-2">Endpoint</th>
-                      <th className="text-left p-2">Requests</th>
-                      <th className="text-left p-2">Median (ms)</th>
-                      <th className="text-left p-2">Avg (ms)</th>
-                      <th className="text-left p-2">RPS</th>
+            {testResults.length > 0 ? (
+              <table className="w-full text-sm text-gray-600 dark:text-gray-400">
+                <thead>
+                  <tr>
+                    <th className="text-left p-2">Endpoint</th>
+                    <th className="text-left p-2">Requests</th>
+                    <th className="text-left p-2">Median (ms)</th>
+                    <th className="text-left p-2">Avg (ms)</th>
+                    <th className="text-left p-2">RPS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {testResults.map((result, index) => (
+                    <tr key={index}>
+                      <td className="p-2">{result.name}</td>
+                      <td className="p-2">{result.requests}</td>
+                      <td className="p-2">{result.median}</td>
+                      <td className="p-2">{result.avg}</td>
+                      <td className="p-2">{result.rps}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {testResults.map((result, index) => (
-                      <tr key={index}>
-                        <td className="p-2">{result.name}</td>
-                        <td className="p-2">{result.requests}</td>
-                        <td className="p-2">{result.median}</td>
-                        <td className="p-2">{result.avg}</td>
-                        <td className="p-2">{result.rps}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-400">
-                  No results available.
-                </p>
-              )}
-            </div>
-          )}
-
-          <PrimaryMetricGraph
-            primaryMetric={primaryMetric}
-            generateGrafanaUrl={generateGrafanaUrl}
-          />
-
-          <DatabaseMetricsTabs
-            relevantMetrics={relevantMetrics}
-            activeMetricTab={activeMetricTab}
-            setActiveMetricTab={setActiveMetricTab}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {relevantMetrics[activeMetricTab].map((metric) => (
-              <MetricGraph
-                key={metric}
-                metric={metric}
-                db={activeMetricTab}
-                generateGrafanaUrl={generateGrafanaUrl}
-                grafanaMetrics={grafanaMetrics}
-              />
-            ))}
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-gray-600 dark:text-gray-400">
+                No results available.
+              </p>
+            )}
           </div>
+        )}
+
+        <PrimaryMetricGraph
+          primaryMetric={primaryMetric}
+          generateGrafanaUrl={generateGrafanaUrl}
+        />
+
+        <DatabaseMetricsTabs
+          relevantMetrics={relevantMetrics}
+          activeMetricTab={activeMetricTab}
+          setActiveMetricTab={setActiveMetricTab}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {relevantMetrics[activeMetricTab].map((metric) => (
+            <MetricGraph
+              key={metric}
+              metric={metric}
+              db={activeMetricTab}
+              generateGrafanaUrl={generateGrafanaUrl}
+              grafanaMetrics={grafanaMetrics}
+            />
+          ))}
         </div>
       </div>
     </div>
