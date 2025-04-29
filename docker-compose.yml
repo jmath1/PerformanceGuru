@@ -4,12 +4,13 @@ services:
       context: ./node_server
       dockerfile: ../_infrastructure/docker/node/Dockerfile
     container_name: node
-    # volumes:
-    #   - ./node_server:/app
+    volumes:
+      - ./node_server/:/app/
+      - /app/node_modules
     working_dir: /app
     ports:
       - "3001:3001"
-    command: /bin/bash -c "npm install && npm start"
+    command: /bin/bash -c "npm install && npm run dev"
     env_file:
       - .env
     depends_on:
@@ -97,7 +98,6 @@ services:
     environment:
       - REDIS_ADDR=host.docker.internal:6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_EXPORTER_PASSWORD=${REDIS_EXPORTER_PASSWORD}
     ports:
       - "9121:9121"
     depends_on:
